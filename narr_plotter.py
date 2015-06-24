@@ -11,28 +11,47 @@ import scipy.ndimage
 ############################################
 #
 # NARR Plotter
+# 
+# Originally authored by:
 # Greg Blumberg (OU/CIMMS)
 # wblumberg@ou.edu
 #
-# Modified by Matt Bolton (How The Weatherworks)
+# Modified by Matt Bolton (How The Weatherworks) to facilitate the creation of color-blind-friendly maps for research. 
 # matt.bolton@weatherworks.com
 #
 #
 # This code will make some nice maps from the
-# NARR. Good for getting an idea of what 
-# happened on a certain day.
+# North American Regional Reanalysis (NARR) database. 
+# Good for getting an idea of what happened on a certain day. 
 #
 ############################################
 
 def regMap():
     '''
         Define map location. Code borrowed from https://github.com/keltonhalbert/AWIDS	
-    '''
-    figure(figsize=(10,8))
-    m = Basemap(width=1500000,height=1100000,
+		
+		m = Basemap(width=1500000,height=1100000,
                   rsphere=(6378137.00,6356752.3142),\
                   resolution='l',area_thresh=1000.,projection='lcc',\
                   lat_1=40,lat_2=30,lat_0=30,lon_0=-87)
+				  
+				  is for the SE US; wind barbs are good at 2 (set "stride") for regional views
+				  
+				  m = Basemap(width=5000000,height=3000000,
+                       rsphere=(6378137.00,6356752.3142),\
+                       resolution='l',area_thresh=1000.,projection='lcc',\
+                       lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
+					   
+					   is for the Continental US (CONUS)
+					   
+					  if using CONUS, remember to lower wind barb resolution (stride 5+ is good)
+		
+    '''
+    figure(figsize=(10,8))
+    m = Basemap(width=5000000,height=3000000,
+                       rsphere=(6378137.00,6356752.3142),\
+                       resolution='l',area_thresh=1000.,projection='lcc',\
+                       lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
     m.drawcoastlines()
     m.drawcountries()
     m.drawstates()
@@ -85,7 +104,7 @@ def w2e(w, p):
 # i.e. python narr_plotter.py 19990503 21 svr
 # This example will make a severe weather type map for May 3rd, 1999 at 21 UTC
 # Other types of maps can be (here are the arguments):
-#   850
+#   850 
 #   700
 #   500
 #   300
@@ -156,7 +175,7 @@ if type == 'sfc':
     clabel(CS, CS.levels, fmt='%4.0f')
 
     # We don't want to plot every wind barb, so let's plot every 5.
-    stride = 2
+    stride = 5
 
     # Convert the surface temperature from Kelvin to Farenheit
     sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
@@ -174,7 +193,7 @@ if type == 'sfc':
     
     # Stuff to draw the colorbar and label it.
     divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=0.20)
     cb = colorbar(cb, cax=cax)
     cb.set_label("Temperature [F]")
     tight_layout()
@@ -234,12 +253,12 @@ if type == 'sfccnt':
     clabel(tm, tm.levels, fmt='%4.0f')
 
     # Plot every 5 surface wind barb
-    stride=2 
+    stride=5 
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
     
     # Draw and position the colorbar onto the figure.
     divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=0.20)
     cb = colorbar(cb, cax=cax)
     cb.set_label("Dewpoint [F]")
     tight_layout()
@@ -309,7 +328,7 @@ if type == 'svr':
     title(dt_str + ' ' + 'Surface NARR-A', fontsize=15)
     
     # Plot every 5 shear vector on the map
-    stride=2
+    stride=5
     #lr_levels = -1 * np.asarray([5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10])
     
     # Plot only CAPE values between 500 and 6500 J/kg at every 500 J/kg
@@ -322,7 +341,7 @@ if type == 'svr':
     
     # Draw the colorbar and position it where we want it.
     divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=0.20)
     cb = colorbar(cb, cax=cax)
     cb.set_label("CAPE [J/kg]")
     tight_layout()
@@ -410,17 +429,17 @@ def plotUA(level):
     
     # Draw the colorbar and position it 
     divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=0.20)
     cb = colorbar(cb, cax=cax)
     cb.set_label("Relative Humidity [%]")
 
     # Save the figure
     savefig(yyyymmdd + '.' + hh + '.ua.' + str(level) + '.png') 
-    #show()
+    show()
 
 print "TYPE OF UA PLOT:", type
 try:
-    # A really cheap hack to find out whether or not the user requested a upper air map
+    # A really cheap hack to find out whether or not the user requested an upper air map
     type = int(type)
     # If the variable "type" can't be converted to an integer, it crashes the program and the program quits gracefully
     plotUA(type)
@@ -439,7 +458,7 @@ except Exception,e:
     x,y = m(lon, lat)
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
     clabel(CS, CS.levels, fmt='%4.0f')
-    stride = 2
+    stride = 5
     sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
     cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("jet"))
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
