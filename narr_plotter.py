@@ -5,6 +5,8 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import datetime
 import scipy.ndimage
+import matplotlib.colors as colors
+
 # Requires basemap, netcdf4-python, matplotlib, numpy, scipy
 # can be obtained through "conda install <pkgname>"
 
@@ -26,6 +28,31 @@ import scipy.ndimage
 #
 ############################################
 
+def from_ascii(filename, name):
+    palette = open(filename)
+    lines = palette.readlines()
+    carray = np.zeros([len(lines), 3])
+    for num, line in enumerate(lines):
+        carray[num, :] = [float(val) for val in line.strip().split()]
+    carray = carray
+    cmap = mpl.colors.ListedColormap(carray/255, name=name)
+    mpl.cm.register_cmap(name=name, cmap=cmap)
+ 
+def grayify_cmap(cmap):
+    """Return a grayscale version of the colormap"""
+    cmap = plt.cm.get_cmap(cmap)
+    colors = cmap(np.arange(cmap.N))
+
+    # convert RGBA to perceived greyscale luminance
+    # cf. http://alienryderflex.com/hsp.html
+    RGB_weight = [0.299, 0.587, 0.114]
+    luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
+    colors[:, :3] = luminance[:, np.newaxis]
+
+    return cmap.from_list(cmap.name + "hcl_colormap", colors, cmap.N)
+
+
+from_ascii("hcl_colormap.txt", 'hcl_colormap')
 def regMap():
     '''
         Define map location. Code borrowed from https://github.com/keltonhalbert/AWIDS	
@@ -35,7 +62,7 @@ def regMap():
                   resolution='l',area_thresh=1000.,projection='lcc',\
                   lat_1=40,lat_2=30,lat_0=30,lon_0=-87)
 				  
-				  is for the SE US; wind barbs are good at 2 (set "stride") for regional views
+				  is for the SE US; wind barbs are good at a resolution of 2 (set "stride") for regional views
 				  
 				  m = Basemap(width=5000000,height=3000000,
                        rsphere=(6378137.00,6356752.3142),\
@@ -44,9 +71,10 @@ def regMap():
 					   
 					   is for the Continental US (CONUS)
 					   
-					  if using CONUS, remember to lower wind barb resolution (stride 5+ is good)
+					  if using CONUS, remember to lower wind barb resolution (stride 5+ is good; default value is to plot every five millibars)
 		
     '''
+	
     figure(figsize=(10,8))
     m = Basemap(width=5000000,height=3000000,
                        rsphere=(6378137.00,6356752.3142),\
@@ -57,7 +85,7 @@ def regMap():
     m.drawstates()
     m.drawcounties()
     return m
-
+	
 def e2td(E):
     '''
         Function to convert vapor pressure to dewpoint.  Needed
@@ -182,7 +210,7 @@ if type == 'sfc':
 
     # Draw a filled contour, where the fill corresponds to the temperature.  Use the colormap "RdYlBu_r"
     # Here is where you'll probably need to play around with different colormaps.
-    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("RdYlBu_r"))
+    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_colormap")) #RdYlBu_r
 
     # Draw the freezing line on the map and label it.
     fz = m.contour(x,y,sfc_temp, np.asarray([32]), colors='m', linestyles='--', linewidths=2)
@@ -192,9 +220,8 @@ if type == 'sfc':
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
     
     # Stuff to draw the colorbar and label it.
-    divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.20)
-    cb = colorbar(cb, cax=cax)
+   
+    cb = colorbar(cb)
     cb.set_label("Temperature [F]")
     tight_layout()
     #show()
@@ -231,7 +258,7 @@ if type == 'sfccnt':
     x,y = m(lon, lat)
 
     # Draw the dewpoint using a color fill of greens between 50 F to 82 F every 2 F.
-    cb = m.contourf(x,y,dwpt, np.arange(50,82,2), cmap=get_cmap('Greens'))
+    cb = m.contourf(x,y,dwpt, np.arange(50,82,2), cmap=get_cmap('hcl_colormap'))
 
     # Draw the MSLP lines and label them.
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
@@ -257,9 +284,8 @@ if type == 'sfccnt':
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
     
     # Draw and position the colorbar onto the figure.
-    divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.20)
-    cb = colorbar(cb, cax=cax)
+    
+    cb = colorbar(cb)
     cb.set_label("Dewpoint [F]")
     tight_layout()
     #show()
@@ -334,15 +360,14 @@ if type == 'svr':
     # Plot only CAPE values between 500 and 6500 J/kg at every 500 J/kg
     # Use the reversed spring color map ('spring_r')
     cape_levels = np.arange(500,6500,500)
-    cb = m.contourf(x,y,cape, cape_levels, cmap='spring_r')
+    cb = m.contourf(x,y,cape, cape_levels, cmap='hcl_colormap')
 
     # Plot the wind shear vectors
     barbs(x[::stride,::stride],y[::stride,::stride],u_shear[::stride,::stride], v_shear[::stride,::stride])
     
     # Draw the colorbar and position it where we want it.
-    divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.20)
-    cb = colorbar(cb, cax=cax)
+   
+    cb = colorbar(cb)
     cb.set_label("CAPE [J/kg]")
     tight_layout()
 
@@ -403,11 +428,11 @@ def plotUA(level):
     # This if statement distinguishes what variables ought to be plotted given different pressure levels.
     if level > 500:
         # If the pressure level is below 500 mb, the contour fill should be relative humidity, and should be green
-        cb = m.contourf(x,y,rh[0], np.arange(70,105,5), cmap=get_cmap('Greens'))
+        cb = m.contourf(x,y,rh[0], np.arange(70,105,5), cmap=get_cmap('hcl_colormap'))
     else:
         # Instead, the wind speed is probably a more important variable.  Plot that and the wind barbs instead.
         wind_spd = np.sqrt(np.power(u[0],2) + np.power(v[0], 2)) # Pythagorean theorem to get wind speed
-        cb = m.contourf(x,y,wind_spd, np.arange(60,240,10), cmap=get_cmap('Reds'), alpha=.8)
+        cb = m.contourf(x,y,wind_spd, np.arange(60,240,10), cmap=get_cmap('hcl_colormap'), alpha=.8)
         m.barbs(x[::5,::5],y[::5,::5],u[0,::5,::5], v[0,::5,::5])
     
     #CS = m.contour(x,y,z[0], np.arange(5160-(60*10), 5880+(60*10),60), colors='k', linewidths=2)
@@ -428,9 +453,8 @@ def plotUA(level):
     clabel(CS, CS.levels, fmt='%4.0f')
     
     # Draw the colorbar and position it 
-    divider = make_axes_locatable(gca())
-    cax = divider.append_axes("right", size="5%", pad=0.20)
-    cb = colorbar(cb, cax=cax)
+ 
+    cb = colorbar(cb)
     cb.set_label("Relative Humidity [%]")
 
     # Save the figure
@@ -460,7 +484,7 @@ except Exception,e:
     clabel(CS, CS.levels, fmt='%4.0f')
     stride = 5
     sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
-    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("jet"))
+    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_colormap"))
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
     colorbar(cb)
     tight_layout()
