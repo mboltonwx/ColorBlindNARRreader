@@ -4,12 +4,11 @@ A script which reads meteorological data from the North American Regional Reanal
 
 Created collaboratively by Greg Blumberg (OU/CIMMS) and Matt Bolton (How The Weatherworks) originally for use in research. 
 
-To run, you need to include some command line arguments
-
 How to Run:
 
-cd / chdir to the directory you downloaded ColorBlindNARRreader to
-Type: python narr_plotter.py 19990503 21 svr (year/month/day, hour [in UTC], and data parameter)
+cd / chdir to the directory you downloaded ColorBlindNARRreader into.
+
+Type: (year/month/day, hour [in UTC], and data parameter) | example: python narr_plotter.py 19990503 21 svr
 This example will make a severe weather type map for May 3rd, 1999 at 21 UTC
 
 Other types of maps can be (here are the arguments):
@@ -20,4 +19,4 @@ Other types of maps can be (here are the arguments):
    sfc
    sfccnt
 
-Note: only a few show on-run. By default, images will save to the directory you extracted the zip to.
+Note: only a few show on-run. By default, images will save to the directory you have ColorBlindNARRreader in.
