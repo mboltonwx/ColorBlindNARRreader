@@ -21,12 +21,24 @@ import matplotlib.colors as colors
 # Modified by Matt Bolton (How The Weatherworks) to facilitate the creation of color-blind-friendly maps for research. 
 # matt.bolton@weatherworks.com
 #
+# Uses the HCL color scheme. See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme. 
+# Colormap RGB codes generated from http://hclwizard.org/
 #
-# This code will make some nice maps from the
+#
+# This code makes color-blind-friendly maps from the
 # North American Regional Reanalysis (NARR) database. 
 # Good for getting an idea of what happened on a certain day. 
 #
 ############################################
+
+''' list1, list2 define custom HCL colormaps based on the map generated (sfc, sfccnt, svr, 850). See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme. 
+	Colormap RGB codes generated from http://hclwizard.org/ - feel free to generate your own for use herein. 
+	
+	Define the colormaps, add them to the colormap database. Then, (for) loop through them (while outputting a list) to select. '''
+	
+
+list1 = ["hcl_sfc.txt", "hcl_sfccnt.txt", "hcl_svr.txt", "hcl_850.txt"]				 
+list2 = ["hcl_sfc", "hcl_sfccnt", "hcl_svr", "hcl_850"]
 
 def from_ascii(filename, name):
     palette = open(filename)
@@ -49,20 +61,23 @@ def grayify_cmap(cmap):
     luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
     colors[:, :3] = luminance[:, np.newaxis]
 
-    return cmap.from_list(cmap.name + "hcl_colormap", colors, cmap.N)
+    return cmap.from_list(cmap.name + "item1", "item2", colors, cmap.N)
 
+for item1, item2 in zip(list1, list2):
+	print item1, item2
+	from_ascii(item1, item2)
 
-from_ascii("hcl_colormap.txt", 'hcl_colormap')
 def regMap():
     '''
-        Define map location. Code borrowed from https://github.com/keltonhalbert/AWIDS	
+        Define map location. To get state/regional coordinates and code, see the NARR_Projection.py file.  
+		File borrowed from https://github.com/keltonhalbert/AWIDS	
 		
 		m = Basemap(width=1500000,height=1100000,
                   rsphere=(6378137.00,6356752.3142),\
                   resolution='l',area_thresh=1000.,projection='lcc',\
                   lat_1=40,lat_2=30,lat_0=30,lon_0=-87)
 				  
-				  is for the SE US; wind barbs are good at a resolution of 2 (set "stride") for regional views
+				  is for the SE US; wind barbs are good at a resolution of 2 (set "stride" below) for regional views
 				  
 				  m = Basemap(width=5000000,height=3000000,
                        rsphere=(6378137.00,6356752.3142),\
@@ -70,7 +85,7 @@ def regMap():
                        lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
 					   
 					   is for the Continental US (CONUS)
-					   
+
 					  if using CONUS, remember to lower wind barb resolution (stride 5+ is good; default value is to plot every five millibars)
 		
     '''
@@ -159,8 +174,8 @@ d = Dataset(narr_path)
 #for i in d.variables.keys():
 
 # Print out all the keys (this will show you all the variables the NARR has (i.e. CAPE, winds, temperature, etc.)
-print d.variables.keys()
 
+print d.variables.keys()
 # Load in an extra file that has the latitude, longitude points of the NARR grid.  This isn't online,
 # so I have a file contained within this package that has this called 'narr_lat_lon.nc'
 ll = Dataset('narr_lat_lon.nc')
@@ -210,7 +225,7 @@ if type == 'sfc':
 
     # Draw a filled contour, where the fill corresponds to the temperature.  Use the colormap "RdYlBu_r"
     # Here is where you'll probably need to play around with different colormaps.
-    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_colormap")) #RdYlBu_r
+    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_sfc")) #RdYlBu_r
 
     # Draw the freezing line on the map and label it.
     fz = m.contour(x,y,sfc_temp, np.asarray([32]), colors='m', linestyles='--', linewidths=2)
@@ -254,11 +269,11 @@ if type == 'sfccnt':
     # Draw the map background.
     m = regMap()
     
-    title(dt_str + ' ' + 'Surface NARR-A', fontsize=15)
+    title(dt_str + ' ' + 'Surface Dewpoint, MSLP, and Winds | NARR-A', fontsize=15)
     x,y = m(lon, lat)
 
     # Draw the dewpoint using a color fill of greens between 50 F to 82 F every 2 F.
-    cb = m.contourf(x,y,dwpt, np.arange(50,82,2), cmap=get_cmap('hcl_colormap'))
+    cb = m.contourf(x,y,dwpt, np.arange(50,82,2), cmap=get_cmap('hcl_sfccnt'))
 
     # Draw the MSLP lines and label them.
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
@@ -351,7 +366,7 @@ if type == 'svr':
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=3)
     clabel(CS, CS.levels, fmt='%4.0f')
     
-    title(dt_str + ' ' + 'Surface NARR-A', fontsize=15)
+    title(dt_str + ' ' + 'Surface MSLP, Dewpoint, CAPE; SFC-500mb Shear', fontsize=15)
     
     # Plot every 5 shear vector on the map
     stride=5
@@ -360,7 +375,7 @@ if type == 'svr':
     # Plot only CAPE values between 500 and 6500 J/kg at every 500 J/kg
     # Use the reversed spring color map ('spring_r')
     cape_levels = np.arange(500,6500,500)
-    cb = m.contourf(x,y,cape, cape_levels, cmap='hcl_colormap')
+    cb = m.contourf(x,y,cape, cape_levels, cmap='hcl_svr')
 
     # Plot the wind shear vectors
     barbs(x[::stride,::stride],y[::stride,::stride],u_shear[::stride,::stride], v_shear[::stride,::stride])
@@ -428,11 +443,11 @@ def plotUA(level):
     # This if statement distinguishes what variables ought to be plotted given different pressure levels.
     if level > 500:
         # If the pressure level is below 500 mb, the contour fill should be relative humidity, and should be green
-        cb = m.contourf(x,y,rh[0], np.arange(70,105,5), cmap=get_cmap('hcl_colormap'))
+        cb = m.contourf(x,y,rh[0], np.arange(70,105,5), cmap=get_cmap('hcl_850'))
     else:
         # Instead, the wind speed is probably a more important variable.  Plot that and the wind barbs instead.
         wind_spd = np.sqrt(np.power(u[0],2) + np.power(v[0], 2)) # Pythagorean theorem to get wind speed
-        cb = m.contourf(x,y,wind_spd, np.arange(60,240,10), cmap=get_cmap('hcl_colormap'), alpha=.8)
+        cb = m.contourf(x,y,wind_spd, np.arange(60,240,10), cmap=get_cmap('hcl_svr'), alpha=.8)
         m.barbs(x[::5,::5],y[::5,::5],u[0,::5,::5], v[0,::5,::5])
     
     #CS = m.contour(x,y,z[0], np.arange(5160-(60*10), 5880+(60*10),60), colors='k', linewidths=2)
