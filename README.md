@@ -4,7 +4,7 @@ A script which reads meteorological data from the North American Regional Reanal
 
 Created collaboratively by Greg Blumberg (OU/CIMMS) and Matt Bolton (How The Weatherworks) originally for use in research. 
 
-How to Run:
+How to Run (from command line):
 
 cd / chdir to the directory you downloaded ColorBlindNARRreader into.
 
