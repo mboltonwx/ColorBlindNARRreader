@@ -4,6 +4,8 @@ A script which reads meteorological data from the North American Regional Reanal
 
 Created collaboratively by Greg Blumberg (OU/CIMMS) and Matt Bolton (How The Weatherworks) originally for use in research. 
 
+Uses the HCL color scheme. See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme. Colormap RGB codes generated from http://hclwizard.org/
+
 How to Run (from command line):
 
 cd / chdir to the directory you downloaded ColorBlindNARRreader into.
