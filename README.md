@@ -9,6 +9,7 @@ How to Run:
 cd / chdir to the directory you downloaded ColorBlindNARRreader into.
 
 Type: (year/month/day, hour [in UTC], and data parameter) | example: python narr_plotter.py 19990503 21 svr
+
 This example will make a severe weather type map for May 3rd, 1999 at 21 UTC
 
 Other types of maps can be (here are the arguments):
