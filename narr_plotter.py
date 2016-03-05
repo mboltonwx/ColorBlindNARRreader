@@ -13,31 +13,32 @@ import matplotlib.colors as colors
 ############################################
 #
 # NARR Plotter
-# 
+#
 # Originally authored by:
 # Greg Blumberg (OU/CIMMS)
 # wblumberg@ou.edu
 #
-# Modified by Matt Bolton (How The Weatherworks) to facilitate the creation of color-blind-friendly maps for research. 
+# Modified by Matt Bolton (How The Weatherworks) to facilitate the creation of color-blind-friendly maps for research.
 # matt.bolton@weatherworks.com
 #
-# Uses the HCL color scheme. See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme. 
+# Uses the HCL color scheme. See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme.
 # Colormap RGB codes generated from http://hclwizard.org/
 #
 #
 # This code makes color-blind-friendly maps from the
-# North American Regional Reanalysis (NARR) database. 
-# Good for getting an idea of what happened on a certain day. 
+# North American Regional Reanalysis (NARR) database.
+# Good for getting an idea of what happened on a certain day.
 #
 ############################################
 
-''' list1, list2 define custom HCL colormaps based on the map generated (sfc, sfccnt, svr, 850). See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme. 
-	Colormap RGB codes generated from http://hclwizard.org/ - feel free to generate your own for use herein. 
-	
-	Define the colormaps, add them to the colormap database. Then, (for) loop through them (while outputting a list) to select. '''
-	
+##
+##	list1, list2 define custom HCL colormaps based on the map generated (sfc, sfccnt, svr, 850). See http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-13-00155.1 for an introduction to the HCL color scheme.
+##	Colormap RGB codes generated from http://hclwizard.org/ - feel free to generate your own for use herein.
+##
+##	Define the colormaps, add them to the colormap database. Then, (for) loop through them (while outputting a list) to select.
+##
 
-list1 = ["hcl_sfc.txt", "hcl_sfccnt.txt", "hcl_svr.txt", "hcl_850.txt"]				 
+list1 = ["hcl_sfc.txt", "hcl_sfccnt.txt", "hcl_svr.txt", "hcl_850.txt"]
 list2 = ["hcl_sfc", "hcl_sfccnt", "hcl_svr", "hcl_850"]
 
 def from_ascii(filename, name):
@@ -49,9 +50,9 @@ def from_ascii(filename, name):
     carray = carray
     cmap = mpl.colors.ListedColormap(carray/255, name=name)
     mpl.cm.register_cmap(name=name, cmap=cmap)
- 
+
 def grayify_cmap(cmap):
-    """Return a grayscale version of the colormap"""
+    # Return a grayscale version of the colormap
     cmap = plt.cm.get_cmap(cmap)
     colors = cmap(np.arange(cmap.N))
 
@@ -68,91 +69,93 @@ for item1, item2 in zip(list1, list2):
 	from_ascii(item1, item2)
 
 def regMap():
-    '''
-        Define map location. To get state/regional coordinates and code, see the NARR_Projection.py file.  
-		File borrowed from https://github.com/keltonhalbert/AWIDS	
-		
-		m = Basemap(width=1500000,height=1100000,
+    #####
+    #    Define map location. To get state/regional coordinates and code, see the NARR_Projection.txt file.
+	#	Projections borrowed from https://github.com/keltonhalbert/AWIDS
+	#
+	#	m = Basemap(width=1500000,height=1100000,
+    #              rsphere=(6378137.00,6356752.3142),\
+    #              resolution='l',area_thresh=1000.,projection='lcc',\
+    #              lat_1=40,lat_2=30,lat_0=30,lon_0=-87)
+	#
+	#			  is for the SE US; wind barbs are good at a resolution of 2 (set "stride" below) for regional views
+	#
+	#			  m = Basemap(width=5000000,height=3000000,
+    #                   rsphere=(6378137.00,6356752.3142),\
+	#                   resolution='l',area_thresh=1000.,projection='lcc',\
+    #                   lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
+	#
+	#				   is for the Continental US (CONUS)
+	#				  if using CONUS, remember to lower wind barb resolution (stride 5+ is good; default value is to plot every five millibars)
+	#
+    #####
+
+# Display Oklahoma
+    figure(figsize=(10,8))
+    m = Basemap(width=1500000,height=1100000,
                   rsphere=(6378137.00,6356752.3142),\
                   resolution='l',area_thresh=1000.,projection='lcc',\
-                  lat_1=40,lat_2=30,lat_0=30,lon_0=-87)
-				  
-				  is for the SE US; wind barbs are good at a resolution of 2 (set "stride" below) for regional views
-				  
-				  m = Basemap(width=5000000,height=3000000,
-                       rsphere=(6378137.00,6356752.3142),\
-                       resolution='l',area_thresh=1000.,projection='lcc',\
-                       lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
-					   
-					   is for the Continental US (CONUS)
-
-					  if using CONUS, remember to lower wind barb resolution (stride 5+ is good; default value is to plot every five millibars)
-		
-    '''
-	
-    figure(figsize=(10,8))
-    m = Basemap(width=5000000,height=3000000,
-                       rsphere=(6378137.00,6356752.3142),\
-                       resolution='l',area_thresh=1000.,projection='lcc',\
-                       lat_1=40,lat_2=30,lat_0=38.5,lon_0=-98.5)
+                  lat_1=40,lat_2=30,lat_0=35,lon_0=-98)
     m.drawcoastlines()
     m.drawcountries()
     m.drawstates()
     m.drawcounties()
     return m
-	
+
 def e2td(E):
-    '''
-        Function to convert vapor pressure to dewpoint.  Needed
-        for some of the maps that get plotted.
-    
-        I think the input units are in mb.
-    '''
+
+    #    Function to convert vapor pressure to dewpoint.  Needed
+    #    for some of the maps that get plotted.
+	#
+    #    I think the input units are in mb.
+
     B = (np.log(E / 6.108)) / 17.27
     D = (237.3 * B) / (1 - B)
     return D
 
 def cc(temp):
-    '''
-        Calusius Clapyron equation to convert temperature or dewpoint
-        to saturation vapor pressure or vapor pressure.
-        
-        I think the input units are in Kelvin or Celsius.
-        Units of the (saturation) vapor pressure are in mb.
-    '''
+
+    #    Calusius Clapyron equation to convert temperature or dewpoint
+    #    to saturation vapor pressure or vapor pressure.
+	#
+    #    I think the input units are in Kelvin or Celsius.
+    #    Units of the (saturation) vapor pressure are in mb.
+
     e = 6.112 * np.exp((17.67*temp)/(temp + 243.5))
     return e
 
 def q2w(w):
-    '''
-        I really don't remember what this does.
-    
-        But it's important.
-    '''
-    return w/(1.+w) 
+
+    #    I really don't remember what this does.
+	#
+    #    But it's important.
+
+    return w/(1.+w)
 
 def w2e(w, p):
-    '''
-        Now this converts mixing ratio to vapor pressure.
-        w is the mixing ratio
-        p is the pressure (mb)
-    '''
+
+    #    Now this converts mixing ratio to vapor pressure.
+    #    w is the mixing ratio
+    #    p is the pressure (mb)
+
     eps = 0.622
     e = ((w/eps)*p)/(1 + (w/eps))
     return e
 
-
-
+#####
+#
 # When running narr_plotter.py, you need to include some command line arguments.
 # i.e. python narr_plotter.py 19990503 21 svr
 # This example will make a severe weather type map for May 3rd, 1999 at 21 UTC
 # Other types of maps can be (here are the arguments):
-#   850 
+#   850
 #   700
 #   500
 #   300
 #   sfc
 #   sfccnt
+#
+#####
 
 yyyymmdd = sys.argv[1]
 hh = sys.argv[2]
@@ -174,8 +177,8 @@ d = Dataset(narr_path)
 #for i in d.variables.keys():
 
 # Print out all the keys (this will show you all the variables the NARR has (i.e. CAPE, winds, temperature, etc.)
-
 print d.variables.keys()
+
 # Load in an extra file that has the latitude, longitude points of the NARR grid.  This isn't online,
 # so I have a file contained within this package that has this called 'narr_lat_lon.nc'
 ll = Dataset('narr_lat_lon.nc')
@@ -199,12 +202,12 @@ if type == 'sfc':
     # That's what something like the [0,:,:] means
     mslp = d.variables['Mean_sea_level_pressure_ETA_model'][0,:,:]/100. # convert MSLP to mb from Pascals
     sfc_temp = d.variables['Temperature_height_above_ground'][0,0,:,:] # 2 meter temperature
-    u_wind = d.variables['u_wind_height_above_ground'][0,0,:,:] * 1.94384 # 10 meter u wind converted to knots
-    v_wind = d.variables['v_wind_height_above_ground'][0,0,:,:] * 1.94384 # 10 meter v wind converted to knots
-    
+   # u_wind = d.variables['u_wind_height_above_ground'][0,0,:,:] * 1.94384 # 10 meter u wind converted to knots
+   # v_wind = d.variables['v_wind_height_above_ground'][0,0,:,:] * 1.94384 # 10 meter v wind converted to knots
+
     # Make a regular map and get the map object so we can draw the data on it.
     m = regMap()
-    
+
     # Draw the title on the map.
     title(dt_str + ' ' + 'Surface NARR-A', fontsize=15)
 
@@ -218,7 +221,7 @@ if type == 'sfc':
     clabel(CS, CS.levels, fmt='%4.0f')
 
     # We don't want to plot every wind barb, so let's plot every 5.
-    stride = 5
+    # stride = 5
 
     # Convert the surface temperature from Kelvin to Farenheit
     sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
@@ -232,24 +235,25 @@ if type == 'sfc':
     clabel(fz, fz.levels, fmt='%4.0f')
 
     # Draw the surface wind barbs on the map.
-    barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
-    
+  #  barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
+
     # Stuff to draw the colorbar and label it.
-   
+
     cb = colorbar(cb)
     cb.set_label("Temperature [F]")
     tight_layout()
-    #show()
+
+    show()
 
     # Save the map to the disk as a .png
     savefig(yyyymmdd + '.' + hh + '.sfc.png')
 
 if type == 'sfccnt':
-    # This will draw surface temperature lines, and a contour fill of dewpoint
+    # This will draw surface temperature lines, and a contour fill of dewpoin
     # This won't be commented as througouly as the above stuff.
     dt = datetime.strptime(yyyymmdd+hh, '%Y%m%d%H')
     dt_str = datetime.strftime(dt, '%d %b %Y  %H UTC')
-    
+
     # Download the data we're going to plot.
     mslp = d.variables['Mean_sea_level_pressure_ETA_model'][0,:,:]/100.
     sfc_temp = d.variables['Temperature_height_above_ground'][0,0,:,:]
@@ -257,7 +261,7 @@ if type == 'sfccnt':
     v_wind = d.variables['v_wind_height_above_ground'][0,0,:,:] * 1.94384
     sh = d.variables['Specific_humidity_height_above_ground'][0,0,:,:]
     pres = d.variables['Pressure'][0,0,:,:]/100.
-    
+
     # Convert the specific humidity into dewpoint.
     e = w2e(q2w(sh), pres)
     dwpt = e2td(e)
@@ -265,10 +269,10 @@ if type == 'sfccnt':
 
     # Convert Sfc temp to F.
     sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
-    
+
     # Draw the map background.
     m = regMap()
-    
+
     title(dt_str + ' ' + 'Surface Dewpoint, MSLP, and Winds | NARR-A', fontsize=15)
     x,y = m(lon, lat)
 
@@ -278,7 +282,7 @@ if type == 'sfccnt':
     # Draw the MSLP lines and label them.
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
     clabel(CS, CS.levels, fmt='%4.0f')
-    
+
     # Run a smoother through the surface temperature field so it looks a little cleaner on the map.
     sfc_temp = scipy.ndimage.gaussian_filter(sfc_temp, 1.5)
 
@@ -295,11 +299,11 @@ if type == 'sfccnt':
     clabel(tm, tm.levels, fmt='%4.0f')
 
     # Plot every 5 surface wind barb
-    stride=5 
+    stride=5
     barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
-    
+
     # Draw and position the colorbar onto the figure.
-    
+
     cb = colorbar(cb)
     cb.set_label("Dewpoint [F]")
     tight_layout()
@@ -315,9 +319,9 @@ if type == 'svr':
     dt_str = datetime.strftime(dt, '%d %b %Y  %H UTC')
 
 
-    v_sfc = d.variables['v_wind_height_above_ground'][0,:,:] 
-    u_sfc = d.variables['u_wind_height_above_ground'][0,:,:] 
-    
+    v_sfc = d.variables['v_wind_height_above_ground'][0,:,:]
+    u_sfc = d.variables['u_wind_height_above_ground'][0,:,:]
+
     # Compute the lapse rate (this stuff isn't really used in the program yet.
     # 700 temperature:
     pres_idx = np.where(d.variables['isobaric'][:] == 700)[0]
@@ -342,7 +346,7 @@ if type == 'svr':
     u_shear = 1.943 * (u5[0] - u_sfc)
     v_shear = 1.943 * (v5[0] - v_sfc)
     mag = np.sqrt(np.power(u_shear, 2) + np.power(v_shear, 2))
-    
+
     # Mask all of the grid points where the shear is less than 30 knots.
     u_shear = np.ma.masked_where(mag < 30, u_shear)[0]
     v_shear = np.ma.masked_where(mag < 30, v_shear)[0]
@@ -360,18 +364,18 @@ if type == 'svr':
 
     # Draw the dewpoint lines and label them
     cb = m.contour(x,y,sfc_dwpt, np.arange(50,82,2), colors='g')
-    clabel(cb, cb.levels, fmt='%4.0f') 
+    clabel(cb, cb.levels, fmt='%4.0f')
 
     # Draw the MSLP contours and label them.
     CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=3)
     clabel(CS, CS.levels, fmt='%4.0f')
-    
+
     title(dt_str + ' ' + 'Surface MSLP, Dewpoint, CAPE; SFC-500mb Shear', fontsize=15)
-    
+
     # Plot every 5 shear vector on the map
     stride=5
     #lr_levels = -1 * np.asarray([5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10])
-    
+
     # Plot only CAPE values between 500 and 6500 J/kg at every 500 J/kg
     # Use the reversed spring color map ('spring_r')
     cape_levels = np.arange(500,6500,500)
@@ -379,9 +383,9 @@ if type == 'svr':
 
     # Plot the wind shear vectors
     barbs(x[::stride,::stride],y[::stride,::stride],u_shear[::stride,::stride], v_shear[::stride,::stride])
-    
+
     # Draw the colorbar and position it where we want it.
-   
+
     cb = colorbar(cb)
     cb.set_label("CAPE [J/kg]")
     tight_layout()
@@ -398,28 +402,28 @@ def plotUA(level):
     # the variable level gets passed to it, and level contains a pressure level (i.e. 850, 700)
     dt = datetime.strptime(yyyymmdd+hh, '%Y%m%d%H')
     dt_str = datetime.strftime(dt, '%d %b %Y  %H UTC')
-    
+
     # Find the array index in the NARR dataset that corresponds to the pressure level requested
     pres_idx = np.where(d.variables['isobaric'][:] == level)[0]
-    
+
     # Get the surface pressure
     sfc_press = d.variables['Pressure'][0,0, :,:]
 
     # Find all of the gridpoints where the pressure level requested is greater than the surface pressure
     # This finds array indices where the pressure surface is "below ground level."
     mask = np.where(sfc_press/100. < level)
-    
+
     temp = d.variables['Temperature'][0,pres_idx, :,:]-273.15
     rh = d.variables['Specific_humidity'][0, pres_idx, :, :]
     z = d.variables['Geopotential_height'][0, pres_idx,:,:]
     u = d.variables['u_wind'][0,pres_idx, :,:]*1.94384
     v = d.variables['v_wind'][0, pres_idx, :,:]*1.94384
-    
+
     # Convert the specific humidity to relative humidity (%)
     es = cc(temp)
     e = w2e(q2w(rh), level)
     rh = (e/es)*100.
-    
+
     # This part is used to hide the portion of the pressure surface that is "below ground"
     # np.nan means it's not a number, which matplotlib won't plot
     temp[0][mask] = np.nan
@@ -429,17 +433,17 @@ def plotUA(level):
     v[0][mask] = np.nan
     terrain = np.ones(v[0].shape)
     terrain[mask] = 0.
-    
-    
+
+
     m = regMap()
     title(dt_str + ' ' + str(level) + ' mb NARR-A', fontsize=15)
-    
+
     tight_layout()
     x,y = m(lon,lat)
-    
+
     # Draw the terrain in grey ( this is the place where the pressure surface is "below ground level"
     contourf(x,y,terrain, [0,.5,1], colors=['k','#FFFFFF'], alpha=.2)
-    
+
     # This if statement distinguishes what variables ought to be plotted given different pressure levels.
     if level > 500:
         # If the pressure level is below 500 mb, the contour fill should be relative humidity, and should be green
@@ -447,33 +451,34 @@ def plotUA(level):
     else:
         # Instead, the wind speed is probably a more important variable.  Plot that and the wind barbs instead.
         wind_spd = np.sqrt(np.power(u[0],2) + np.power(v[0], 2)) # Pythagorean theorem to get wind speed
+
         cb = m.contourf(x,y,wind_spd, np.arange(60,240,10), cmap=get_cmap('hcl_svr'), alpha=.8)
         m.barbs(x[::5,::5],y[::5,::5],u[0,::5,::5], v[0,::5,::5])
-    
+
     #CS = m.contour(x,y,z[0], np.arange(5160-(60*10), 5880+(60*10),60), colors='k', linewidths=2)
-    
-    # Always plot the geopotential height 
+
+    # Always plot the geopotential height
     # Need to actually provide specific contour levels for different maps (haven't done that yet)
     CS = m.contour(x,y,z[0], colors='k', linewidths=2) # Plot the geopotential height
-    clabel(CS, CS.levels, fmt='%4.0f') # 
-    
-    # Do the same coloring of different isotherms (temperature contours) 
+    clabel(CS, CS.levels, fmt='%4.0f') #
+
+    # Do the same coloring of different isotherms (temperature contours)
     # to distinguish whether or not they are above, at, or below freezing
     temp_levels = np.arange(-80,82,2)
     zero_level = np.where(temp_levels == 0)[0]
     temp_colors = np.repeat('r', len(temp_levels)) # Use red (could also use hex colors here?)
     temp_colors[zero_level] = 'm' # use magenta
-    temp_colors[:zero_level] = 'b' # use blue 
+    temp_colors[:zero_level] = 'b' # use blue
     CS = m.contour(x,y,temp[0], temp_levels, colors=temp_colors, linestyles='--', linewidths=1.5)
     clabel(CS, CS.levels, fmt='%4.0f')
-    
-    # Draw the colorbar and position it 
- 
+
+    # Draw the colorbar and position it
+
     cb = colorbar(cb)
     cb.set_label("Relative Humidity [%]")
 
     # Save the figure
-    savefig(yyyymmdd + '.' + hh + '.ua.' + str(level) + '.png') 
+    savefig(yyyymmdd + '.' + hh + '.ua.' + str(level) + '.png')
     show()
 
 print "TYPE OF UA PLOT:", type
@@ -488,21 +493,20 @@ except Exception,e:
     print e
     sys.exit() # Exit the program
 
-    # some left over dummy code...don't remember why
-    """
-    m = regMap()
-    sfc_temp = d.variables['Temperature'][0,0,:,:]
-    u_wind = d.variables['u_wind_height_above_ground'][0,0,:,:] * 1.94384
-    v_wind = d.variables['v_wind_height_above_ground'][0,0,:,:] * 1.94384
-    x,y = m(lon, lat)
-    CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
-    clabel(CS, CS.levels, fmt='%4.0f')
-    stride = 5
-    sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
-    cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_colormap"))
-    barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
-    colorbar(cb)
-    tight_layout()
-    savefig(yyyymmdd + '.' + hh + '.sfc.png')
-    """
-    
+    # some left over dummy code... don't remember why
+    #######
+    ## m = regMap()
+    ## sfc_temp = d.variables['Temperature'][0,0,:,:]
+    ## u_wind = d.variables['u_wind_height_above_ground'][0,0,:,:] * 1.94384
+    ## v_wind = d.variables['v_wind_height_above_ground'][0,0,:,:] * 1.94384
+    ## x,y = m(lon, lat)
+    ## CS = m.contour(x,y, mslp, np.arange(940,1104,4), colors='k', linewidths=2)
+    ## clabel(CS, CS.levels, fmt='%4.0f')
+    ## stride = 5
+    ## sfc_temp =((sfc_temp - 273.15)*1.8 + 32)
+    ## cb = m.contourf(x,y,sfc_temp, np.arange(-40,132,2), cmap=get_cmap("hcl_colormap"))
+    ## barbs(x[::stride,::stride],y[::stride,::stride],u_wind[::stride,::stride], v_wind[::stride,::stride])
+    ## colorbar(cb)
+    ## tight_layout()
+    ## savefig(yyyymmdd + '.' + hh + '.sfc.png')
+    #######
